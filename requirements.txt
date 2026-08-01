@@ -1,0 +1,16 @@
+streamlit
+langchain
+langchain-text-splitters
+openai
+chromadb
+faiss-cpu
+sentence-transformers
+rank_bm25
+ragas
+trulens-eval
+fastapi
+uvicorn
+python-dotenv
+pandas
+tqdm
+datasets
