@@ -1,10 +1,3 @@
-from sentence_transformers import SentenceTransformer, util
-
-# Simple semantic expansion using embedding similarity
-
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
-
 def rewrite_query(query: str) -> str:
     """
     Lightweight query enhancement without API

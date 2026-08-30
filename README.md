@@ -1,183 +1,212 @@
-# 🧠 Self-Improving RAG System
+# Self-Improving Hybrid RAG
+
+**Author:** Damien De La Cerda
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red)
-![LLM](https://img.shields.io/badge/LLM-GPT%20%7C%20Fallback-green)
-![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B)
+![Retrieval](https://img.shields.io/badge/Retrieval-BM25%20%2B%20Vector-0D9488)
+![LLM](https://img.shields.io/badge/LLM-OpenAI%20%7C%20Fallback-6B7280)
 
-------------------------------------------------------------------------
+A modular **Retrieval-Augmented Generation** demo that combines hybrid search, optional LLM answers, evaluation hooks, and a user feedback loop for scientific-style Q&A.
 
-## 🚀 Overview
+---
 
-A **production-grade Self-Improving Retrieval-Augmented Generation (RAG)
-system** that demonstrates:
+## Overview
 
--   Hybrid Retrieval (BM25 + Vector Search)
--   Query Rewriting using LLM
--   Answer Generation with fallback (no API dependency)
--   RAG Evaluation (Faithfulness + Relevancy)
--   Feedback Loop for continuous improvement
--   Interactive Streamlit UI
+**Self-Improving Hybrid RAG** answers questions over a document corpus by:
 
-------------------------------------------------------------------------
+1. Expanding the user query  
+2. Retrieving evidence with **BM25 + vector search**  
+3. Generating an answer with **OpenAI** (or a context fallback)  
+4. Optionally scoring the answer  
+5. Collecting ratings so low-quality responses can drive improvement  
 
-## 📸 Screenshots
+It is designed as a clear GenAI learning / portfolio project: each pipeline stage lives in its own module and can be extended independently.
 
-> Add screenshots in `screenshots/` folder
+---
 
-### 🔹 UI Overview
+## Pipeline
 
-![UI](screenshots/ui.png)
+```text
+User query
+    → Query rewriter
+    → Hybrid retrieval (BM25 ∪ Chroma vector search)
+    → Answer generator (OpenAI gpt-4o-mini / fallback)
+    → Evaluation (RAGAS when available)
+    → Feedback (1–5) → feedback.json
+    → Improver (processes low ratings)
+```
 
-### 🔹 Query & Answer
+---
 
-![Query](screenshots/query.png)
+## Features
 
-### 🔹 Evaluation Metrics
+| Feature | Description |
+|---|---|
+| Hybrid retrieval | Keyword (BM25) + semantic (MiniLM embeddings + Chroma) |
+| Query rewriting | Lightweight expansion before search |
+| Answer generation | OpenAI when `OPENAI_API_KEY` is set and billed; otherwise retrieved-context fallback |
+| Evaluation | RAGAS faithfulness / answer relevancy when dependencies allow |
+| Feedback loop | Ratings saved to `feedback.json`; scores below 3 feed the improver |
+| Dual interface | Streamlit UI and CLI |
 
-![Eval](screenshots/eval.png)
+---
 
-------------------------------------------------------------------------
+## Tech stack
 
-## 🏗️ System Architecture
+- **UI:** Streamlit  
+- **Retrieval:** `rank_bm25`, ChromaDB, Sentence Transformers (`all-MiniLM-L6-v2`)  
+- **Chunking:** LangChain text splitters  
+- **LLM:** OpenAI (`gpt-4o-mini`), optional  
+- **Evaluation:** RAGAS (optional)  
+- **Language:** Python 3.10+
 
-    User Query
-       ↓
-    Query Rewriter (LLM)
-       ↓
-    Hybrid Retrieval (BM25 + Vector DB)
-       ↓
-    Answer Generator (LLM / Fallback)
-       ↓
-    Evaluation (RAGAS)
-       ↓
-    Feedback Loop → Improvement
+---
 
-------------------------------------------------------------------------
+## Project structure
 
-## 🛠️ Tech Stack
+```text
+self-improving-rag/
+├── app/
+│   ├── ui.py              # Streamlit interface
+│   ├── main.py            # CLI entrypoint
+│   ├── retriever.py       # Load, chunk, index, hybrid search
+│   ├── query_rewriter.py  # Query expansion
+│   ├── generator.py       # LLM / fallback answers
+│   ├── evaluator.py       # RAGAS evaluation wrapper
+│   ├── feedback.py        # Persist user ratings
+│   └── improver.py        # Process low-rated queries
+├── config/
+│   └── settings.py        # API key + embedding model path
+├── models/                # Local MiniLM weights (optional, gitignored)
+├── data/                  # Optional corpus CSV (gitignored)
+├── requirements.txt
+└── README.md
+```
 
--   **LLM**: OpenAI GPT (fallback supported)
--   **Vector DB**: ChromaDB
--   **Embeddings**: Sentence Transformers
--   **Retrieval**: BM25 + Semantic Search
--   **Evaluation**: RAGAS
--   **UI**: Streamlit
--   **Backend**: Python
+---
 
-------------------------------------------------------------------------
+## Setup
 
-## 📂 Project Structure
+### 1. Clone and enter the project
 
-    self-improving-rag/
-    │
-    ├── app/
-    │   ├── main.py
-    │   ├── ui.py
-    │   ├── retriever.py
-    │   ├── generator.py
-    │   ├── evaluator.py
-    │   ├── feedback.py
-    │   ├── improver.py
-    │   ├── query_rewriter.py
-    │
-    ├── config/
-    │   └── settings.py
-    │
-    ├── data/ (ignored)
-    ├── screenshots/
-    ├── requirements.txt
-    ├── README.md
+```bash
+git clone https://github.com/YOUR_USERNAME/self-improving-rag.git
+cd self-improving-rag
+```
 
-------------------------------------------------------------------------
+### 2. Create a virtual environment (Windows)
 
-## ⚙️ Setup Instructions
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-### 1. Clone Repository
+### 3. Install dependencies
 
-    git clone https://github.com/YOUR_USERNAME/self-improving-rag.git
-    cd self-improving-rag
+```powershell
+pip install -r requirements.txt
+```
 
-### 2. Create Virtual Environment
+### 4. Embedding model
 
-    python -m venv venv
-    venv\Scripts\activate
+The app expects Sentence Transformers **`all-MiniLM-L6-v2`**.
 
-### 3. Install Dependencies
+- If `models/all-MiniLM-L6-v2/` exists, that local copy is used (recommended when Hugging Face CDN is blocked).  
+- Otherwise the model is downloaded from Hugging Face on first run.
 
-    pip install -r requirements.txt
+### 5. OpenAI API key (optional, for real LLM answers)
 
-### 4. (Optional) Add OpenAI API Key
+Set the key in the **same terminal** before starting the app:
 
-Create `.env` file:
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+```
 
-    OPENAI_API_KEY=your_key_here
+Notes:
 
-------------------------------------------------------------------------
+- Without a key (or if the API call fails), the UI still runs and returns a **fallback** answer from retrieved chunks.  
+- A valid key with **available credits** is required for generated answers. Quota / billing errors appear in the fallback message.  
+- A Hugging Face token is only for model downloads; it does **not** generate answers in this project.
 
-## 📊 Dataset (Optional)
+---
 
-Download from Kaggle:
+## Dataset (optional)
 
-**arXiv Scientific Dataset**
+Place an arXiv-style CSV at:
 
-Place inside:
+```text
+data/arXiv_scientific dataset.csv
+```
 
-    data/arXiv_scientific dataset.csv
+The loader looks for a `summary` or `abstract` column and uses up to 2000 rows.
 
-⚠️ If not provided → app uses fallback data
+If the file is missing, the app uses a small built-in sample corpus so you can still demo the pipeline.
 
-------------------------------------------------------------------------
+---
 
-## ▶️ Run Application
+## Run
 
-### CLI Mode
+### Streamlit UI (recommended)
 
-    python -m app.main
+```powershell
+streamlit run app/ui.py
+```
 
-### Streamlit UI
+Open the local URL (usually `http://localhost:8501`).
 
-    streamlit run app/ui.py
+### CLI
 
-------------------------------------------------------------------------
+```powershell
+python -m app.main
+```
 
-## 📊 Evaluation Metrics
+---
 
--   **Faithfulness** → grounded in retrieved context\
--   **Answer Relevancy** → matches user query
+## Evaluation
 
-------------------------------------------------------------------------
+When RAGAS and its dependencies load successfully:
 
-## 🔁 Feedback Loop
+- **Faithfulness** — is the answer grounded in retrieved context?  
+- **Answer relevancy** — does the answer address the question?
 
--   User rates answer (1--5)
--   Poor responses tracked
--   System improves future queries
+If evaluation is unavailable, the UI shows a clear status and the rest of the pipeline continues.
 
-------------------------------------------------------------------------
+---
 
-## 💡 Why This Project Stands Out
+## Feedback loop
 
--   Real-world GenAI system design\
--   Hybrid retrieval (industry-level)\
--   Evaluation pipeline (rare)\
--   Self-improving architecture\
--   Production-ready handling (fallbacks, scalability)
+1. User rates each answer from **1 (poor)** to **5 (excellent)**.  
+2. Ratings are appended to `feedback.json`.  
+3. Ratings below **3** are treated as bad feedback for `improver.py`.
 
-------------------------------------------------------------------------
+This gives the architecture of a self-improving system. Extending the improver to update retrieval, prompts, or stored rewrites is a natural next step.
 
-## 📈 Future Improvements
+---
 
--   Cross-encoder re-ranking\
--   Agentic RAG\
--   Persistent vector DB\
--   Multi-source ingestion\
--   LangSmith tracing
+## Current limitations
 
+- Chroma runs in-memory and is rebuilt on cold start.  
+- Hybrid search merges BM25 and vector hits by ID union (no score fusion / re-ranking yet).  
+- Query rewriting uses rule-based expansion (not an LLM rewrite).  
+- The improver currently analyzes low ratings; it does not yet update the index or generation policy.
 
-------------------------------------------------------------------------
+---
 
-## ⭐ Support
+## Roadmap
 
-If you found this useful, give it a ⭐ on GitHub!
+- Reciprocal rank fusion (RRF) or cross-encoder re-ranking  
+- Persistent vector store  
+- Closed-loop improvement from feedback (rewrite cache / hard negatives)  
+- Stronger evaluation defaults and tracing (e.g. LangSmith)  
+- Multi-source document ingestion  
+
+---
+
+## License
+
+MIT
+
+---
+
+Built by **Damien De La Cerda**.

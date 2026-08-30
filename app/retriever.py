@@ -6,8 +6,10 @@ from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 import os
 
-# Initialize embedding model
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+from config.settings import EMBEDDING_MODEL_NAME
+
+# Initialize embedding model (local models/ folder preferred)
+embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 
 def embed(texts):
