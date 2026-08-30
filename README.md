@@ -91,8 +91,8 @@ self-improving-rag/
 ### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/self-improving-rag.git
-cd self-improving-rag
+git clone https://github.com/DamienDeLaCerda/Self-Improving-Hybrid-RAG.git
+cd Self-Improving-Hybrid-RAG
 ```
 
 ### 2. Create a virtual environment (Windows)
