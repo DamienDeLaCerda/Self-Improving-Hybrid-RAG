@@ -15,3 +15,6 @@ EMBEDDING_MODEL_NAME = (
     if _LOCAL_EMBEDDING_MODEL.exists()
     else "sentence-transformers/all-MiniLM-L6-v2"
 )
+
+# Cross-encoder used after hybrid retrieval (override with local models/ copy if present)
+RERANKER_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
