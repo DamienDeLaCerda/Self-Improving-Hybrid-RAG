@@ -7,6 +7,8 @@ from tqdm import tqdm
 import os
 
 from config.settings import EMBEDDING_MODEL_NAME
+from app.reranker import rerank
+
 
 # Initialize embedding model (local models/ folder preferred)
 embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
@@ -98,17 +100,27 @@ def build_bm25(chunks):
 # ---------------- HYBRID SEARCH ---------------- #
 
 def hybrid_search(query, collection, bm25, chunks, k=5):
+    # Pull a wider candidate pool, then re-rank down to k
+    candidate_k = max(k * 2, k)
+
     bm25_scores = bm25.get_scores(query.split())
-    bm25_top = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:k]
+    bm25_top = sorted(
+        range(len(bm25_scores)),
+        key=lambda i: bm25_scores[i],
+        reverse=True,
+    )[:candidate_k]
 
     query_embedding = embed([query])[0]
-    vector_results = collection.query(query_embeddings=[query_embedding], n_results=k)
+    vector_results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=min(candidate_k, len(chunks)),
+    )
 
     vector_ids = [int(i) for i in vector_results["ids"][0]]
+    combined_ids = list(dict.fromkeys(bm25_top + vector_ids))
+    candidates = [chunks[i] for i in combined_ids]
 
-    combined_ids = list(set(bm25_top + vector_ids))
-
-    return [chunks[i] for i in combined_ids]
+    return rerank(query, candidates, top_k=k)
 
 
 # ---------------- MAIN ---------------- #
