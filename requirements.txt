@@ -5,6 +5,7 @@ openai
 chromadb
 faiss-cpu
 sentence-transformers
+torchvision
 rank_bm25
 ragas
 trulens-eval

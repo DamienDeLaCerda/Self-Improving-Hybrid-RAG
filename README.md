@@ -23,6 +23,12 @@ A modular **Retrieval-Augmented Generation** demo that combines hybrid search, o
 
 It is designed as a clear GenAI learning / portfolio project: each pipeline stage lives in its own module and can be extended independently.
 
+
+## Screenshots
+
+### 🔹 UI Overview
+
+![UI](screenshots/ui.png)
 ---
 
 ## Pipeline
